@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/lib/com.google.ads"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="55.3dp"
+            android:background="@drawable/title_bg"
+            android:gravity="center"
+            android:orientation="horizontal" >
+
+            <ImageButton
+                android:id="@+id/home_inputbox_icon"
+                android:layout_width="28dp"
+                android:layout_height="40dp"
+                android:layout_marginLeft="10dp"
+                android:background="@drawable/inputbox_icon" />
+
+            <AutoCompleteTextView
+                android:id="@+id/home_Edit01"
+                android:layout_width="160dp"
+                android:layout_height="40dp"
+                android:layout_weight="0.15"
+                android:background="@drawable/inputbox"
+                android:hint="검색어 입력"
+                android:paddingLeft="5dp"
+                android:singleLine="true"
+                android:src="@drawable/inputbox_icon"
+                android:textColor="#214f5c"
+                android:textColorHint="#dfdfdf"
+                android:textSize="15sp" />
+
+            <ImageButton
+                android:id="@+id/home_del_btn2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/del_btn3" />
+
+            <ImageButton
+                android:id="@+id/home_search_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/search_btn1" />
+
+            <AbsoluteLayout
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_gravity="center"
+                android:layout_marginLeft="8dp"
+                android:background="@drawable/title_bg"
+                android:orientation="vertical" >
+
+                <ImageButton
+                    android:id="@+id/home_Bt02"
+                    android:layout_width="38.6dp"
+                    android:layout_height="41dp"
+                    android:layout_x="5dp"
+                    android:layout_y="7.5dp"
+                    android:background="@drawable/titlebar_favorite_btn" />
+
+                <ImageButton
+                    android:id="@+id/home_fav_add_icon"
+                    android:layout_width="16.6dp"
+                    android:layout_height="20dp"
+                    android:layout_marginLeft="15dp"
+                    android:layout_x="30dp"
+                    android:layout_y="1.3dp"
+                    android:background="@drawable/fav_add_icon" />
+            </AbsoluteLayout>
+
+            <ImageButton
+                android:id="@+id/home_Bt01"
+                android:layout_width="38.6dp"
+                android:layout_height="41dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="7dp"
+                android:layout_marginTop="0.5dp"
+                android:background="@drawable/titlebar_sertting_btn" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_weight="9"
+            android:flipInterval="1000" >
+
+            <WebView
+                android:id="@+id/home_Web01"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent" />
+
+            <ListView
+                android:id="@+id/home_WordList"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:background="@drawable/main_bg"
+                android:cacheColorHint="#00000000"
+                android:divider="#ffffff"
+                android:listSelector="#000000" />
+        </FrameLayout>
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="5px" />
+
+        <com.fsn.cauly.CaulyAdView
+            xmlns:app="http://schemas.android.com/apk/res/com.all.eng.dic.kyy.project"
+            android:id="@+id/xmladview"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            app:appcode="i3PXxt6Osh"
+            app:bannerHeight="Fixed"
+            app:dynamicReloadInterval="true"
+            app:effect="RightSlide"
+            app:reloadInterval="20" />
+
+        <!--
+        <FrameLayout
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:flipInterval="1000">
+
+	  	<com.cauly.android.ad.AdView
+			xmlns:app="http://schemas.android.com/apk/res/com.all.eng.dic.kyy.project"
+			android:id="@+id/ad"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentBottom="true"
+	        app:appcode="i3PXxt6Osh"
+	        app:adtype="cpc"
+	        app:gender="all"
+	        app:age="all"
+	        app:effect="bottom_slide"
+	        app:gps="off"
+	        app:allowcall="yes"
+	        app:reloadInterval="30"
+	        app:dynamicReloadInterval="true"/>
+
+	  	<ImageButton
+	  	    android:id="@+id/home_ad"
+	  	    android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:background="@drawable/ad"
+	  	    />
+
+  	</FrameLayout>
+        -->
+
+
+        <!--
+         <HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:id="@+id/home_Hsv"
+	    android:layout_width="fill_parent"
+	    android:background="@drawable/navigator_bg"
+	    android:layout_height="60dip"
+	    android:layout_weight="1"
+	    >
+        -->
+
+        <LinearLayout
+            android:id="@+id/home_Ll"
+            android:layout_width="fill_parent"
+            android:layout_height="66.6dp"
+            android:gravity="center"
+            android:orientation="horizontal" >
+
+            <Button
+                android:id="@+id/home_Bt03"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/botbuttonselector"
+                android:text="네이버" />
+
+            <Button
+                android:id="@+id/home_Bt04"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/botbuttonselector"
+                android:text="다음" />
+
+            <Button
+                android:id="@+id/home_Bt05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/botbuttonselector"
+                android:text="구글" />
+
+            <Button
+                android:id="@+id/home_Bt06"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/botbuttonselector"
+                android:text="야후" />
+
+            <Button
+                android:id="@+id/home_Bt07"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/botbuttonselector"
+                android:text="네이트" />
+
+            <Button
+                android:id="@+id/home_Bt08"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/botbuttonselector"
+                android:text="파란" />
+
+            <Button
+                android:id="@+id/home_Bt09"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/botbuttonselector"
+                android:text="블루딕" />
+
+            <Button
+                android:id="@+id/home_Bt10"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/botbuttonselector"
+                android:text="올인올" />
+        </LinearLayout>
+        <!-- </HorizontalScrollView> -->
+
+    </LinearLayout>
+
+</RelativeLayout>

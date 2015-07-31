@@ -1,0 +1,10 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_window_focused="false" 
+        android:state_enabled="true"
+        android:drawable="@drawable/botbutton" /> <!-- 평소때 -->
+    <item android:state_pressed="true" 
+        android:drawable="@drawable/botbuttonoff" /> <!--  눌렀을때 -->
+    <item android:state_enabled="true"
+        android:drawable="@drawable/botbutton" /> <!--  땠을때 -->
+</selector>
+

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, AllEngDic_Main!</string>
+    <string name="app_name">멀티사전 종결자</string>
+    
+    <string name="activity_animation_duration">300</string>
+    <string name="withmob_uid">A0miJW58mIvsJo1REeGDzfM2</string>
+    
+</resources>

@@ -1,0 +1,1152 @@
+package com.all.eng.dic.kyy.project;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
+
+import kr.co.withmob.withmobsdk_v01.WithMob;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.Parcelable;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.webkit.WebSettings;
+import android.webkit.WebSettings.ZoomDensity;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.HorizontalScrollView;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.PopupWindow;
+import android.widget.TableRow.LayoutParams;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class AllEngDic_Home extends Activity implements OnClickListener {
+	public static boolean m_HelpPageFlag = true;
+	Button bt3, bt4, bt5, bt6, bt7, bt8, bt9, bt10;
+	ImageButton bt1, bt2, inputbox_icon, fav_add_icon, home_ad, home_del_btn2, home_search_btn;
+	LinearLayout ll, ll2;
+	HorizontalScrollView hsv;
+	ListView lv;
+	AutoCompleteTextView et1;
+	WebView wv;
+	private WebSettings ws;
+	private String m_Url;
+	private AllEngDic_dbHandler db;
+	com.cauly.android.ad.AdView ad;
+	PopupWindow popup;
+	private boolean wordSaveFlag = false;
+	private String wordList[];
+
+	private final int COUNT = 2;
+	private ViewPager mPager; // 뷰 페이저
+
+	private OnClickListener mFavoliteClick = new OnClickListener() { // 클릭 이벤트
+																		// 객체
+		public void onClick(View v) {
+			// Toast.makeText(getApplication(), "mFavoliteClick...", 0).show();
+			// wordSave();
+
+			// InputMethodManager imm = (InputMethodManager)
+			// getSystemService(Context.INPUT_METHOD_SERVICE);
+			// imm.hideSoftInputFromWindow(et1.getWindowToken(), 0);
+			//
+			// popup_list(); // 즐겨찾기 팝업을 띄움.
+			// fav_add_icon.setVisibility(View.GONE);
+
+			Intent i = new Intent(getApplication(), AllEngDic_Word.class);
+			i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(i);
+			overridePendingTransition(R.anim.slide_right_in, R.anim.slide_right_out);
+			finish();
+		}
+	};
+
+	private OnClickListener mSettingClick = new OnClickListener() { // 클릭 이벤트 객체
+		public void onClick(View v) {
+			// Toast.makeText(getApplication(), "mSettingClick...", 0).show();
+
+			Intent i = new Intent(getApplication(), AllEngDic_Setting.class);
+			i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+					| Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(i);
+			finish();
+		}
+	};
+
+	// 구글서비스 종료 : 2012.07.20
+	// 비공식 구글 api
+	// http://www.google.com/dictionary/json?callback=maesiltea&sl=en&tl=ko&q=
+	private String arryAddr[] = {
+			"http://m.endic.naver.com/search.nhn?isOnlyViewEE=N&query=",
+			//"http://www.google.co.kr/dictionary?langpair=en%7Cko&q=",
+			"http://translate.google.co.kr/#en/ko/",
+			"http://kr.dictionary.search.yahoo.com/search/dictionaryp?prop=&subtype=eng&p=",
+			"http://alldic.nate.com/search/endic.html?thr=vnde&nq=6&cm=c&q=",
+			"http://dic.paran.com/dic_total_search.php?lv2=0&lv3=0&dic_idx=0&dic_type=1&q=",
+			"http://www.bluedic.com/" };
+
+	private String arrDaum[] = {
+			"http://m.engdic.daum.net/dicen/mobile_search.do?q=", "#1&keyword=" };
+
+	private String arrAllriall[] = {
+			"http://www.ybmallinall.com/dic/dic_view.asp?range=SR&kwd=",
+			"&dict=dic_all&printdict=19&q=&link=&siteURL=&pageURL=&dd_select=a&search_kwd=" };
+
+	DTO_Address addr = new DTO_Address();
+
+	// 버튼에 사용할 이름 저장 및 사용유무(최초 1회만)
+	private boolean initPotalSetting() {
+		addr = new DTO_Address();
+		db = new AllEngDic_dbHandler(this);
+
+		if (db == null) {
+			Toast.makeText(this, "정상적인 DB작업을 할 수 없습니다.", 0).show();
+			return false;
+		}
+
+		addr.setIdx("1");
+		addr.setAddr("");
+		addr.setName("네이버");
+		addr.setChk(true);
+		db.dataPotalSave(addr);
+
+		addr = new DTO_Address();
+		addr.setIdx("2");
+		addr.setAddr("");
+		addr.setName("다음");
+		addr.setChk(true);
+		db.dataPotalSave(addr);
+
+		addr = new DTO_Address();
+		addr.setIdx("3");
+		addr.setAddr("");
+		addr.setName("구글");
+		addr.setChk(true);
+		db.dataPotalSave(addr);
+
+		addr = new DTO_Address();
+		addr.setIdx("4");
+		addr.setAddr("");
+		addr.setName("야후");
+		addr.setChk(true);
+		db.dataPotalSave(addr);
+
+		addr = new DTO_Address();
+		addr.setIdx("5");
+		addr.setAddr("");
+		addr.setName("네이트");
+		addr.setChk(true);
+		db.dataPotalSave(addr);
+
+		// addr = new DTO_Address();
+		// addr.setIdx("6");
+		// addr.setAddr("");
+		// addr.setName("파란");
+		// addr.setChk(true);
+		// db.dataPotalSave(addr);
+		//
+		// addr = new DTO_Address();
+		// addr.setIdx("7");
+		// addr.setAddr("");
+		// addr.setName("블루딕");
+		// addr.setChk(true);
+		// db.dataPotalSave(addr);
+		//
+		// addr = new DTO_Address();
+		// addr.setIdx("8");
+		// addr.setAddr("");
+		// addr.setName("올리올");
+		// addr.setChk(true);
+		// db.dataPotalSave(addr);
+
+		return true;
+	}
+
+	// 동적버튼 생성
+	Button bt[];
+	private int currIndex;
+	private int currTotalCount;
+	private boolean currFlag = false;
+	private void initBt() {
+		currTotalCount = 0;
+		
+		ll = (LinearLayout) findViewById(R.id.home_Ll);
+		ll.removeAllViews();
+
+		Vector<DTO_Address> vec = new Vector<DTO_Address>();
+		DTO_Address a = new DTO_Address();
+		vec = db.dataPotalRead();
+
+		bt = new Button[vec.size()];
+		for (int i = 0; i < bt.length; i++) {
+			a = new DTO_Address();
+			a = vec.get(i);
+			
+			if (a.isChk()) {
+				
+				currTotalCount++;
+				
+				bt[i] = new Button(this);
+				// bt[i].setText(a.getName());
+				bt[i].setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+				bt[i].setTag(a.getName());
+				if (a.getName().equals("네이버")) {
+					bt[i].setBackgroundDrawable(getResources().getDrawable(
+							R.drawable.bottom_naver_btn));
+					ll.addView(bt[i]);
+					
+					if(currFlag == false){
+						currIndex = i;
+						currFlag = true;
+					}
+				}
+				if (a.getName().equals("다음")) {
+					bt[i].setBackgroundDrawable(getResources().getDrawable(
+							R.drawable.bottom_daum_btn));
+					ll.addView(bt[i]);
+					
+					if(currFlag == false){
+						currIndex = i;
+						currFlag = true;
+					}
+				}
+				if (a.getName().equals("구글")) {
+					bt[i].setBackgroundDrawable(getResources().getDrawable(
+							R.drawable.bottom_google_btn));
+					ll.addView(bt[i]);
+					
+					if(currFlag == false){
+						currIndex = i;
+						currFlag = true;
+					}
+				}
+				if (a.getName().equals("야후")) {
+					bt[i].setBackgroundDrawable(getResources().getDrawable(
+							R.drawable.bottom_yahoo_btn));
+					ll.addView(bt[i]);
+					
+					if(currFlag == false){
+						currIndex = i;
+						currFlag = true;
+					}
+				}
+				if (a.getName().equals("네이트")) {
+					bt[i].setBackgroundDrawable(getResources().getDrawable(
+							R.drawable.bottom_nate_btn));
+					ll.addView(bt[i]);
+					
+					if(currFlag == false){
+						currIndex = i;
+						currFlag = true;
+					}
+				}
+				
+				// bt[i].setBackgroundDrawable(getResources().getDrawable(
+				// R.drawable.botbuttonselector));
+
+				// ll.addView(bt[i]);
+
+				// lineMake();
+
+				bt[i].setOnClickListener(new View.OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						Button btTemp = (Button) v;
+						
+						buttonInit(bt, currTotalCount);
+						
+						Log.d("kimyongyeon", currTotalCount + "");
+						Log.d("kimyongyeon", bt.length + "");
+						
+						if (btTemp.getTag().toString().equals("네이버")) {
+							btTemp.setBackgroundDrawable(getResources()
+									.getDrawable(R.drawable.bottom_naver_pre));
+							webSetting();
+							m_Url = arryAddr[0]
+									+ et1.getText().toString().trim();
+							wv.loadUrl(m_Url);
+							ad.setVisibility(View.INVISIBLE);
+							home_ad.setVisibility(View.VISIBLE);
+						}
+						if (btTemp.getTag().toString().equals("다음")) {
+							btTemp.setBackgroundDrawable(getResources()
+									.getDrawable(R.drawable.bottom_daum_pre));
+							webSetting();
+							m_Url = arrDaum[0]
+									+ et1.getText().toString().trim()
+									+ arrDaum[1]
+									+ et1.getText().toString().trim();
+							wv.loadUrl(m_Url);
+							ad.setVisibility(View.INVISIBLE);
+							home_ad.setVisibility(View.VISIBLE);
+						}
+						if (btTemp.getTag().toString().equals("구글")) {
+							btTemp.setBackgroundDrawable(getResources()
+									.getDrawable(R.drawable.bottom_google_pre));
+							webSetting();
+							m_Url = arryAddr[1]
+									+ et1.getText().toString().trim();
+							Log.d("kimyongyeon", m_Url);
+							wv.loadUrl(m_Url);
+							ad.setVisibility(View.VISIBLE);
+							home_ad.setVisibility(View.GONE);
+						}
+						if (btTemp.getTag().toString().equals("야후")) {
+							btTemp.setBackgroundDrawable(getResources()
+									.getDrawable(R.drawable.bottom_yahoo_pre));
+							webSetting();
+							m_Url = arryAddr[2]
+									+ et1.getText().toString().trim();
+							wv.loadUrl(m_Url);
+							ad.setVisibility(View.VISIBLE);
+							home_ad.setVisibility(View.GONE);
+						}
+						if (btTemp.getTag().toString().equals("네이트")) {
+							btTemp.setBackgroundDrawable(getResources()
+									.getDrawable(R.drawable.bottom_nate_pre));
+							webSetting();
+							m_Url = arryAddr[3]
+									+ et1.getText().toString().trim();
+							wv.loadUrl(m_Url);
+							ad.setVisibility(View.VISIBLE);
+							home_ad.setVisibility(View.GONE);
+						}
+						// if (bt.getTag().toString().equals("파란")) {
+						// webSetting();
+						// m_Url = arryAddr[4]
+						// + et1.getText().toString().trim();
+						// wv.loadUrl(m_Url);
+						// buttonInit();
+						// ad.setVisibility(View.VISIBLE);
+						// }
+						// if (bt.getText().toString().equals("블루딕")) {
+						// webSetting();
+						// m_Url = arryAddr[5]
+						// + et1.getText().toString().trim();
+						// wv.loadUrl(m_Url);
+						// buttonInit();
+						// ad.setVisibility(View.VISIBLE);
+						// }
+						// if (bt.getText().toString().equals("올리올")) {
+						// m_Url = arrAllriall[0]
+						// + et1.getText().toString().trim()
+						// + arrAllriall[1]
+						// + et1.getText().toString().trim();
+						// wv.loadUrl(m_Url);
+						// buttonInit();
+						// ad.setVisibility(View.VISIBLE);
+						// }
+					}
+				});
+			}
+		}
+	}
+
+	private void lineMake() {
+		Button bt = new Button(this);
+		bt.setLayoutParams(new LayoutParams(2, 25));
+		bt.setBackgroundDrawable(getResources().getDrawable(
+				R.drawable.bottom_border_line));
+		ll.addView(bt);
+	}
+
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		boolean chk = new Internet_Check(this).internetChk();
+		if (!chk) {
+			Toast.makeText(this, "인터넷을 사용할 수 없습니다.", 0).show();
+		}
+		initBt();
+		
+		bt[currIndex].setBackgroundDrawable(getResources()
+				.getDrawable(R.drawable.bottom_naver_pre));
+	}
+	
+	// 메뉴 버튼을 처음 1회 눌렀을 때 호출
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuItem mi1 = menu.add(0, 0, Menu.NONE, "모두삭제");
+		return true;
+	}
+	
+	// 메뉴버튼 클릭이벤트 처리
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int gId = item.getGroupId();
+		if (gId == 0) { // 모두삭제
+			delDialog();
+		}
+		return false;
+
+	}
+	
+	private void delDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		// builder.setIcon(R.drawable.guitar);
+		builder.setTitle("주의");
+		builder.setMessage("정말로 모두 삭제하시겠습니까? \n (복구가 절대 되지 않습니다!)");
+		DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// showMsg("which : "+ which);
+				if (which == -1) {
+					db = new AllEngDic_dbHandler(AllEngDic_Home.this);
+					db.dropT2();
+					dataList();
+				} else {
+				}
+			}
+		};
+
+		builder.setPositiveButton("예", listener);
+		builder.setNegativeButton("아니오", listener);
+		builder.show();
+	}
+
+	@Override
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		super.onDestroy();
+		if (db != null)
+			db.dbClose();
+
+		AllEngDic_TabHost_Main.tabFlag = false;
+	}
+
+	private void getStrData() {
+		Intent i = getIntent();
+		if (i != null) {
+			String str = i.getStringExtra("AllEngDic_TabHost_Main");
+			webSetting();
+			m_Url = "http://m.endic.naver.com/search.nhn?isOnlyViewEE=N&query="
+					+ str;
+			wv.loadUrl(m_Url);
+			// buttonInit();
+			// bt3.setBackgroundResource(R.drawable.botbuttonoff);
+			et1.setText(str.trim());
+		}
+	}
+	
+	private boolean keyFlag = false;
+	public static boolean tabFlag = false;
+
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.allengdic_home);
+		
+		ad = (com.cauly.android.ad.AdView) findViewById(R.id.ad);
+		//ad.setVisibility(View.INVISIBLE);
+		bt1 = (ImageButton) findViewById(R.id.home_Bt01);
+		bt2 = (ImageButton) findViewById(R.id.home_Bt02);
+		inputbox_icon = (ImageButton) findViewById(R.id.home_inputbox_icon);
+		fav_add_icon = (ImageButton) findViewById(R.id.home_fav_add_icon);
+		home_ad = (ImageButton) findViewById(R.id.home_ad);
+		home_del_btn2 = (ImageButton) findViewById(R.id.home_del_btn2);
+		home_search_btn = (ImageButton) findViewById(R.id.home_search_btn);
+		hsv = (HorizontalScrollView) findViewById(R.id.home_Hsv);
+		fav_add_icon.setVisibility(View.GONE);
+		et1 = (AutoCompleteTextView) findViewById(R.id.home_Edit01);
+		db = new AllEngDic_dbHandler(this);
+		Vector<DTO_Word> vec = db.dataSearchRead();
+		wordList = new String[vec.size()];
+		for(int i=0; i<vec.size(); i++){
+			DTO_Word d = vec.get(i);
+			wordList[i] = d.getWord();
+		}
+	    ArrayAdapter adapter = new ArrayAdapter(this,
+	             android.R.layout.simple_dropdown_item_1line, wordList);
+	    et1.setAdapter(adapter);
+	     
+		wv = (WebView) findViewById(R.id.home_Web01);
+		home_ad.setVisibility(View.GONE);
+		
+		home_ad.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				WithMob withMob = new WithMob();
+				withMob.openWithMob(AllEngDic_Home.this, R.layout.withmob_adv, R.id.withmob_adv_view, R.string.withmob_uid);
+			}
+		});
+		// Search Button Click
+		home_search_btn.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				
+				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.hideSoftInputFromWindow(et1.getWindowToken(), 0);
+				
+				lv.setVisibility(View.GONE);
+				wv.setVisibility(View.VISIBLE);
+				hsv.setVisibility(View.VISIBLE);
+				ad.setVisibility(View.GONE);
+				home_ad.setVisibility(View.VISIBLE);
+				webSetting();
+				m_Url = "http://m.endic.naver.com/search.nhn?isOnlyViewEE=N&query="
+						+ et1.getText().toString().trim();
+				wv.loadUrl(m_Url);
+				if (et1.getText().toString().length() > 0)
+					searchWordSave();
+				bt[currIndex].setBackgroundDrawable(getResources().getDrawable(R.drawable.bottom_naver_pre));
+				
+				keyFlag = true;
+			}
+		});
+		
+		home_del_btn2.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				et1.setText("");
+				home_del_btn2.setBackgroundDrawable(getResources()
+						.getDrawable(R.drawable.del_btn3));
+				// button gone
+				hsv.setVisibility(View.GONE);
+				ad.setVisibility(View.VISIBLE);
+				home_ad.setVisibility(View.GONE);
+				
+				db = new AllEngDic_dbHandler(AllEngDic_Home.this);
+				Vector<DTO_Word> vec = db.dataSearchRead();
+				wordList = new String[vec.size()];
+				for(int i=0; i<vec.size(); i++){
+					DTO_Word d = vec.get(i);
+					wordList[i] = d.getWord();
+				}
+			    ArrayAdapter adapter = new ArrayAdapter(AllEngDic_Home.this,
+			             android.R.layout.simple_dropdown_item_1line, wordList);
+			    et1.setAdapter(adapter);
+			}
+		});
+		
+		et1.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+
+			@Override
+			public boolean onEditorAction(TextView v, int actionId,
+					KeyEvent event) {
+				if (actionId == EditorInfo.IME_ACTION_SEND) {
+					return true;
+				} else {
+					lv.setVisibility(View.GONE);
+					wv.setVisibility(View.VISIBLE);
+					hsv.setVisibility(View.VISIBLE);
+					ad.setVisibility(View.GONE);
+					home_ad.setVisibility(View.VISIBLE);
+					webSetting();
+					m_Url = "http://m.endic.naver.com/search.nhn?isOnlyViewEE=N&query="
+							+ et1.getText().toString().trim();
+					wv.loadUrl(m_Url);
+					if (et1.getText().toString().length() > 0)
+						searchWordSave();
+					bt[currIndex].setBackgroundDrawable(getResources()
+							.getDrawable(R.drawable.bottom_naver_pre));
+					
+					keyFlag = true;
+
+					return false;
+				}
+			}
+		});
+
+		bt1.setOnClickListener(mSettingClick);
+		bt2.setOnClickListener(mFavoliteClick);
+
+		boolean isSettings = initPotalSetting();
+		if (isSettings) {
+			initBt();
+		} else {
+			Toast.makeText(getApplication(),
+					"정상적인 DB작업이 이루어지지 않았습니다.\n" + "일부기능이 제한적일 수 있습니다.", 0)
+					.show();
+		}
+
+		if (et1.getText().toString().equals("")) {
+			wv.setVisibility(View.GONE);
+			lv = (ListView) findViewById(R.id.home_WordList);
+			lv.setVisibility(View.VISIBLE);
+			hsv.setVisibility(View.GONE);
+			dataList();
+		}
+
+		et1.addTextChangedListener(mWatcher);// 에디트텍스트에 리스너를 등록함
+
+		inputbox_icon.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				if (wordSaveFlag == true) {
+					wordSave();
+					fav_add_icon.setVisibility(View.VISIBLE);
+				}
+			}
+		});
+		
+//		et1.setInputType(0);
+		
+		et1.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				if(keyFlag == false){
+					InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE); 
+					imm.showSoftInput(et1, 0);					
+				}else{
+					InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+					imm.hideSoftInputFromWindow(et1.getWindowToken(), 0);
+					
+					keyFlag = false;
+				}
+			}
+		});
+		
+		String str="";
+		Intent i = getIntent();
+		if(tabFlag == true){
+			if (i != null) {
+				
+				bt[currIndex].setBackgroundDrawable(getResources()
+						.getDrawable(R.drawable.bottom_naver_pre));
+				
+				str = i.getStringExtra("AllEngDic_Word");
+				et1.setText(str);
+				
+				lv.setVisibility(View.GONE);
+				wv.setVisibility(View.VISIBLE);
+				hsv.setVisibility(View.VISIBLE);
+				ad.setVisibility(View.GONE);
+				home_ad.setVisibility(View.VISIBLE);
+				
+				webSetting();
+				m_Url = "http://m.endic.naver.com/search.nhn?isOnlyViewEE=N&query="
+						+ et1.getText().toString().trim();
+				wv.loadUrl(m_Url);
+				
+				tabFlag = false;
+			}
+		}
+		
+//		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+//		imm.hideSoftInputFromWindow(et1.getWindowToken(), 0);
+
+	}
+
+//	private void popup_list() {
+//		View v = View.inflate(this, R.layout.popup_list, null);
+//		popup = new PopupWindow(v, LayoutParams.FILL_PARENT, 500, true);
+//		popup.setOutsideTouchable(true); // 이부분을 설정해주어야 팝업이 떳을때 다른부분에 이벤트를
+//											// 줄수있습니다.
+//		popup.setBackgroundDrawable(new BitmapDrawable()); // 이부분에 이벤트가 들어오게됩니다.
+//		popup.showAtLocation(v, Gravity.CENTER | Gravity.BOTTOM, 100, 193);
+//
+//		lv = (ListView) v.findViewById(R.id.wordList);
+//		dataList2();
+//	}
+
+	TextWatcher mWatcher = new TextWatcher() {
+
+		@Override
+		public void onTextChanged(CharSequence s, int start, int before,
+				int count) {
+			// TODO Auto-generated method stub
+			
+			if (et1.getText().length() <= 0) {
+				wv.setVisibility(View.GONE);
+				lv = (ListView) findViewById(R.id.home_WordList);
+				lv.setVisibility(View.VISIBLE);
+				dataList();
+				inputbox_icon.setBackgroundDrawable(getResources().getDrawable(
+						R.drawable.inputbox_icon));
+				wordSaveFlag = false;
+
+				et1.setTextSize(13);
+
+			} else {
+				
+				home_del_btn2.setBackgroundDrawable(getResources()
+						.getDrawable(R.drawable.del_btn2));
+				
+				home_search_btn.setBackgroundDrawable(getResources()
+						.getDrawable(R.drawable.search_btn));
+				
+				if (et1.getText().length() > 22) {
+					et1.setTextSize(16);
+				} else {
+					et1.setTextSize(18);
+				}
+
+				inputbox_icon.setBackgroundDrawable(getResources().getDrawable(
+						R.drawable.favorite_btn));
+				wordSaveFlag = true;
+			}
+		}
+
+		@Override
+		public void beforeTextChanged(CharSequence s, int start, int count,
+				int after) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void afterTextChanged(Editable s) {
+			// TODO Auto-generated method stub
+
+		}
+	};
+
+	// Pager 아답터 구현
+	public void dataList() {
+		Vector<DTO_Word> vec = null;
+
+		try {
+			db = new AllEngDic_dbHandler(this);
+			// vec = db.dataRead();
+			vec = db.dataSearchRead();
+			final WordAdapter sa = new WordAdapter(this, vec);
+
+			lv.setAdapter(sa);
+
+//			lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//
+//				public void onItemClick(AdapterView<?> arg0, View arg1,
+//						int arg2, long arg3) {
+//					DTO_Word w = new DTO_Word();
+//					w = sa.getItem(arg2);
+//					String str = w.getWord();
+//					Intent i = new Intent(AllEngDic_Home.this,
+//							AllEngDic_Home.class);
+//					i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+//							| Intent.FLAG_ACTIVITY_NEW_TASK);
+//					i.putExtra("AllEngDic_Word", str);
+//					startActivity(i);
+//				}
+//
+//			});
+		} catch (Exception e) {
+			// showMsg("저장된 값이 없습니다.");
+		}
+	}
+
+//	public void dataList2() {
+//		Vector<DTO_Word> vec = null;
+//
+//		try {
+//			db = new AllEngDic_dbHandler(this);
+//			vec = db.dataRead();
+//			final Popup_WordAdapter sa = new Popup_WordAdapter(this, vec);
+//
+//			lv.setAdapter(sa);
+//
+//			lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//
+//				public void onItemClick(AdapterView<?> arg0, View arg1,
+//						int arg2, long arg3) {
+//					DTO_Word w = new DTO_Word();
+//					w = sa.getItem(arg2);
+//					String str = w.getWord();
+//					Intent i = new Intent(AllEngDic_Home.this,
+//							AllEngDic_Home.class);
+//					i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+//							| Intent.FLAG_ACTIVITY_NEW_TASK);
+//					i.putExtra("AllEngDic_Word", str);
+//					startActivity(i);
+//				}
+//
+//			});
+//		} catch (Exception e) {
+//			// showMsg("저장된 값이 없습니다.");
+//		}
+//	}
+
+	private Map<Integer, Boolean> check = new HashMap<Integer, Boolean>();
+
+	class WordAdapter extends BaseAdapter {
+		private LayoutInflater inflater;
+		private DTO_Word w;
+		private Vector<DTO_Word> vec = new Vector<DTO_Word>();
+
+		WordAdapter(Context context, Vector<DTO_Word> vec) {
+			inflater = (LayoutInflater) context
+					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			this.vec = vec;
+		}
+
+		public int getCount() {
+			// TODO Auto-generated method stub
+			return vec.size();
+		}
+
+		public DTO_Word getItem(int position) {
+			// TODO Auto-generated method stub
+			return vec.get(position);
+		}
+
+		public long getItemId(int position) {
+			// TODO Auto-generated method stub
+			return position;
+		}
+
+		TextView tv_str1;
+		ImageButton ib;
+
+		public View getView(int position, View convertView, ViewGroup parent) {
+			// TODO Auto-generated method stub
+			if (convertView == null) {
+				convertView = inflater.inflate(
+						R.layout.allengdic_word_row_list, parent, false);
+			}
+
+			tv_str1 = (TextView) convertView.findViewById(R.id.rowTx01); // 단어
+			TextView tv_str2 = (TextView) convertView.findViewById(R.id.rowTx02); // 날짜
+			ib = (ImageButton) convertView.findViewById(R.id.rowBt01);
+			
+			w = new DTO_Word();
+			w = vec.get(position);
+			tv_str1.setTag(position);
+			ib.setTag(position);
+			tv_str1.setText(w.getWord()); // 단어
+			tv_str2.setText(w.getDate()); // 날짜
+
+			if(w.isChk()){
+				ib.setBackgroundDrawable(getResources().getDrawable(R.drawable.list_favorite_btn_pre));
+			}else{
+				ib.setBackgroundDrawable(getResources().getDrawable(R.drawable.list_favorite_btn));
+			}
+			
+			ib.setOnClickListener(new View.OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					// TODO Auto-generated method stub
+					// 즐겨찾기 버튼 저장
+					ImageButton btTemp = (ImageButton) v;
+					btTemp.setBackgroundDrawable(getResources().getDrawable(R.drawable.list_favorite_btn_pre));					
+					
+					DTO_Word word = new DTO_Word();
+					word = vec.get((Integer)v.getTag());
+					
+					if(word.isChk()){
+//						word.setChk(false);
+//						db.dataSearchUpdate(word);
+//						ib.setBackgroundDrawable(getResources().getDrawable(R.drawable.list_favorite_btn));
+//						
+//						word = vec.get((Integer)v.getTag());
+//						db.dataDelete(word.getIdx()+"");
+						
+					}else{
+						word.setChk(true);
+						db.dataSearchUpdate(word);
+						
+						// 즐겨찾기에 추가.
+						Date date = new Date();
+						SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
+						String str = format.format(date);
+
+						DTO_Word w = new DTO_Word();
+						w.setWord(word.getWord());
+						w.setDate(str);
+						w.setChk(true);
+
+						db.dataSave(w);
+						fav_add_icon.setVisibility(View.VISIBLE);
+						
+						Toast.makeText(getApplication(), "'" + word.getWord() + "' 단어가 추가되었습니다.", Toast.LENGTH_SHORT).show();
+					}
+					
+					
+//					dataList();
+//					notifyDataSetChanged();
+				}
+			});
+
+			tv_str1.setOnClickListener(new View.OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					// TODO Auto-generated method stub
+					DTO_Word w = new DTO_Word();
+					w = vec.get((Integer) v.getTag());
+					String str = w.getWord();
+					if (!str.equals("")) {
+						
+						InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+						imm.hideSoftInputFromWindow(et1.getWindowToken(), 0);
+						
+						et1.setText(str);
+						initBt();
+						lv.setVisibility(View.GONE);
+						wv.setVisibility(View.VISIBLE);
+						hsv.setVisibility(View.VISIBLE);
+						ad.setVisibility(View.GONE);
+						home_ad.setVisibility(View.VISIBLE);
+						
+						webSetting();
+						m_Url = "http://m.endic.naver.com/search.nhn?isOnlyViewEE=N&query="
+								+ et1.getText().toString().trim();
+						wv.loadUrl(m_Url);
+						
+						bt[currIndex].setBackgroundDrawable(getResources()
+								.getDrawable(R.drawable.bottom_naver_pre));
+						
+						keyFlag = true;						
+
+					} else {
+						Toast.makeText(getParent(), "정확하게 터치해 주시기 바랍니다.", 0).show();
+					}
+				}
+			});
+
+			return convertView;
+		}
+	}
+
+//	class Popup_WordAdapter extends BaseAdapter {
+//		private LayoutInflater inflater;
+//		private DTO_Word w;
+//		private Vector<DTO_Word> vec = new Vector<DTO_Word>();
+//
+//		Popup_WordAdapter(Context context, Vector<DTO_Word> vec) {
+//			inflater = (LayoutInflater) context
+//					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//			this.vec = vec;
+//		}
+//
+//		public int getCount() {
+//			// TODO Auto-generated method stub
+//			return vec.size();
+//		}
+//
+//		public DTO_Word getItem(int position) {
+//			// TODO Auto-generated method stub
+//			return vec.get(position);
+//		}
+//
+//		public long getItemId(int position) {
+//			// TODO Auto-generated method stub
+//			return position;
+//		}
+//
+//		TextView tv_str1;
+//
+//		public View getView(int position, View convertView, ViewGroup parent) {
+//			// TODO Auto-generated method stub
+//			if (convertView == null) {
+//				convertView = inflater.inflate(
+//						R.layout.allengdic_word_row_list2, parent, false);
+//			}
+//
+//			tv_str1 = (TextView) convertView.findViewById(R.id.row2Tx01); // 단어
+//			TextView tv_str2 = (TextView) convertView
+//					.findViewById(R.id.row2Tx02); // 날짜
+//			// CheckBox checkbox = (CheckBox)
+//			// convertView.findViewById(R.id.row_select_checkbox); // 지움 체크박스
+//
+//			tv_str1.setOnClickListener(new View.OnClickListener() {
+//
+//				@Override
+//				public void onClick(View v) {
+//					// TODO Auto-generated method stub
+//					DTO_Word w = new DTO_Word();
+//					w = vec.get((Integer) v.getTag());
+//					String str = w.getWord();
+//					if (!str.equals("")) {
+//						initBt();
+//						
+//						et1.setText(str);
+//						
+//						lv.setVisibility(View.GONE);
+//						wv.setVisibility(View.VISIBLE);
+//						hsv.setVisibility(View.VISIBLE);
+//						ad.setVisibility(View.GONE);
+//						home_ad.setVisibility(View.VISIBLE);
+//
+//						webSetting();
+//						m_Url = "http://m.endic.naver.com/search.nhn?isOnlyViewEE=N&query="
+//								+ et1.getText().toString().trim();
+//						wv.loadUrl(m_Url);
+//						
+//						bt[currIndex].setBackgroundDrawable(getResources()
+//								.getDrawable(R.drawable.bottom_naver_pre));
+//						
+//						keyFlag = true;
+//						
+//					} else {
+//						Toast.makeText(getParent(), "정확하게 터치해 주시기 바랍니다.", 0)
+//								.show();
+//					}
+//				}
+//			});
+//
+//			w = new DTO_Word();
+//			w = vec.get(position);
+//			// checkbox.setTag(position);
+//			tv_str1.setTag(position);
+//			tv_str1.setText(w.getWord()); // 단어
+//			tv_str2.setText(w.getDate()); // 날짜
+//
+//			return convertView;
+//		}
+//	}
+
+	private void webSetting() {
+		ws = wv.getSettings();
+		// Zoom을 지원할지 지정합니다. ws.setSupportZoom(true); // WebView에 내장된
+		// zoom mechanism이 사용되고 있으면 treu를 돌려 줍니다.
+		ws.setBuiltInZoomControls(true);
+		ws.setDefaultZoom(ZoomDensity.FAR);
+		ws.setUseWideViewPort(true);
+		// wv.setBackgroundColor(Color.BLACK);
+		wv.getSettings().setJavaScriptEnabled(true);
+		wv.setHorizontalScrollBarEnabled(false); //
+		wv.setWebViewClient(new WebViewClient()); // 중요
+	}
+
+	private String m_str;
+
+	private void buttonInit(Button[] bt, int currTotalCount) {
+		
+		for (int i = 0; i < bt.length; i++) {
+			
+			if(bt[i] != null){
+				if (bt[i].getTag().toString().equals("다음")) {
+					bt[i].setBackgroundDrawable(getResources().getDrawable(
+							R.drawable.bottom_daum_btn));
+				}
+				if (bt[i].getTag().toString().equals("네이버")) {
+					bt[i].setBackgroundDrawable(getResources().getDrawable(
+							R.drawable.bottom_naver_btn));
+				}
+				if (bt[i].getTag().toString().equals("구글")) {
+					bt[i].setBackgroundDrawable(getResources().getDrawable(
+							R.drawable.bottom_google_btn));
+				}
+				if (bt[i].getTag().toString().equals("야후")) {
+					bt[i].setBackgroundDrawable(getResources().getDrawable(
+							R.drawable.bottom_yahoo_btn));
+				}
+				if (bt[i].getTag().toString().equals("네이트")) {
+					bt[i].setBackgroundDrawable(getResources().getDrawable(
+							R.drawable.bottom_nate_btn));
+				}	
+			}
+		}
+	}
+
+	private void wordSave() {
+		// 오늘날짜
+		Date date = new Date();
+		// SimpleDateFormat format = new SimpleDateFormat(
+		// "yyyy-MM-dd HH:mm:ss.SSS");
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
+		String str = format.format(date);
+
+		DTO_Word w = new DTO_Word();
+		String word = et1.getText().toString().trim();
+		w.setWord(word);
+		w.setDate(str);
+		w.setChk(false);
+
+		// db = new AllEngDic_dbHandler(this);
+		db.dataSave(w);
+		showMsg();
+	}
+
+	private void searchWordSave() {
+		// 오늘날짜
+		Date date = new Date();
+		// SimpleDateFormat format = new SimpleDateFormat(
+		// "yyyy-MM-dd HH:mm:ss.SSS");
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+		String str = format.format(date);
+
+		DTO_Word w = new DTO_Word();
+		String word = et1.getText().toString().trim();
+		w.setWord(word);
+		w.setDate(str);
+		w.setChk(false);
+
+		// db = new AllEngDic_dbHandler(this);
+		db.dataSearchSave(w);
+		// showMsg();
+	}
+
+	private void showMsg() {
+		String str = et1.getText().toString().trim();
+		Toast.makeText(this, "'" + str + "' 단어가 추가되었습니다.", Toast.LENGTH_SHORT)
+				.show();
+	}
+
+	@Override
+	public void onClick(View v) {
+		// TODO Auto-generated method stub
+		switch (v.getId()) {
+		case R.id.home_Bt01:
+			// 설정
+		case R.id.home_Bt02:
+			// 즐겨찾기
+			// wordSave();
+			break;
+		}
+	}
+
+	@Override
+	public void onBackPressed() {
+		// TODO Auto-generated method stub
+		// super.onBackPressed();
+		endDialog();
+	}
+
+	private void endDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		// builder.setIcon(R.drawable.guitar);
+		builder.setTitle("종료");
+		builder.setMessage("종료하시겠습니까?");
+		DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// showMsg("which : "+ which);
+				if (which == -1) {
+					finish();
+				} else {
+				}
+			}
+		};
+
+		builder.setPositiveButton("예", listener);
+		builder.setNegativeButton("아니오", listener);
+		builder.show();
+	}
+}

@@ -1,0 +1,414 @@
+package com.all.eng.dic.kyy.project;
+
+import java.util.Vector;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.telephony.TelephonyManager;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TableRow.LayoutParams;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class AllEngDic_Setting extends Activity implements OnClickListener {
+	Button bt1, bt3;
+	ImageButton setBack;
+	ListView lv;
+	TextView tv1, setHelp, setSound, setBt02, bt2;
+	private AllEngDic_dbHandler db;
+	private Vector<DTO_Address> vec = new Vector<DTO_Address>();
+	LinearLayout ll;
+	
+	@Override
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		super.onDestroy();
+		if (db != null)
+			db.dbClose();
+
+		AllEngDic_TabHost_Main.tabFlag = false;
+	}
+	/**
+	 * 사운드 환경설정 이동.
+	 */
+	private void soundMove(){
+		Intent i = new Intent(Settings.ACTION_SOUND_SETTINGS);
+		startActivity(i);
+	}
+//	private void listChkInit(){
+//		db = new AllEngDic_dbHandler(this);
+//		vec = db.dataPotalRead();
+//		
+//		lv = (ListView)findViewById(R.id.setLv01);
+//		final WordAdapter sa = new WordAdapter(this, vec);
+//		lv.setAdapter(sa);
+//	}
+	
+	class WordAdapter extends BaseAdapter {
+		private LayoutInflater inflater;
+		private DTO_Address w;
+		private Vector<DTO_Address> vec = new Vector<DTO_Address>();
+
+		WordAdapter(Context context, Vector<DTO_Address> vec) {
+			inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			this.vec = vec;
+		}
+
+		public int getCount() {
+			// TODO Auto-generated method stub
+			return vec.size();
+		}
+
+		public DTO_Address getItem(int position) {
+			// TODO Auto-generated method stub
+			return vec.get(position);
+		}
+
+		public long getItemId(int position) {
+			// TODO Auto-generated method stub
+			return position;
+		}
+		TextView tv_str1;
+		ImageButton ib;
+		public View getView(int position, View convertView, ViewGroup parent) {
+			// TODO Auto-generated method stub
+			if (convertView == null) {
+				convertView = inflater.inflate(R.layout.allengdic_setting_row_list, parent, false);
+			}
+			
+			tv_str1 = (TextView) convertView.findViewById(R.id.setting_rowTx01); // 단어
+//			ib = (ImageButton) convertView.findViewById(R.id.setting_rowChk01); // 체크박스
+			final CheckBox checkbox = (CheckBox) convertView.findViewById(R.id.setting_rowChk01); // 지움 체크박스
+
+			w = new DTO_Address();
+			w = vec.get(position);
+			checkbox.setTag(position);
+			checkbox.setChecked(w.isChk());
+			tv_str1.setTag(position);
+			tv_str1.setText(w.getName());
+			
+			checkbox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+				
+				@Override
+				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+					// TODO Auto-generated method stub
+					int p = (Integer)checkbox.getTag();
+					if(isChecked){
+						chkYn(true, p);
+					}else{
+						chkYn(false, p);
+					}
+				}
+			});
+
+			return convertView;
+		}
+	}
+	
+	private void chkYn(boolean f, int p){
+		DTO_Address addr = new DTO_Address();
+		addr = vec.get(p);
+		if(f){
+			addr.setChk(true);
+		}else{
+			addr.setChk(false);
+		}
+		db.dataPotalUpdate(addr);
+	}
+
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.allengdic_setting);
+
+		bt1 = (Button) findViewById(R.id.setBt01);
+		tv1 = (TextView) findViewById(R.id.setTv01);
+		ll = (LinearLayout) findViewById(R.id.setLl01);
+		setBack = (ImageButton) findViewById(R.id.setBack);
+		setHelp = (TextView) findViewById(R.id.setHelp);
+		setSound = (TextView) findViewById(R.id.setSound);
+		bt2 = (TextView) findViewById(R.id.setBt02);
+		
+        bt1.setOnClickListener(this);
+		bt2.setOnClickListener(this);
+		
+		LinearLayout ll2 = (LinearLayout) findViewById(R.id.setLl02);
+		LinearLayout ll3 = (LinearLayout) findViewById(R.id.setLl03);
+		
+		ll2.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				Intent i = new Intent(AllEngDic_Setting.this, AllEngDic_Favor.class);
+				startActivity(i);
+				finish();
+			}
+		});
+
+		ll3.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				if(!isNetWork()){
+					Toast.makeText(AllEngDic_Setting.this, "인터넷을 확인해 주세요.", 0).show();
+				}else{
+					Intent i = new Intent(AllEngDic_Setting.this, AllEngDic_Notice.class);
+					startActivity(i);
+					finish();
+				}
+			}
+		});
+		
+//		listChkInit();
+		
+		TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+		String phone = tm.getLine1Number();
+		Vector<DTO_Icon> list = new Util().postAppUpgrade(phone);
+		appSettingMake(list);
+
+		setBack.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				Intent i = new Intent(getApplication(), AllEngDic_Home.class);
+				i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+				startActivity(i);
+				finish();
+			}
+		});
+		// help page 이동.
+		setHelp.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				AllEngDic_Home.m_HelpPageFlag = false;
+				Intent i = new Intent(AllEngDic_Setting.this, AllEngDic_Guide.class);
+				startActivity(i);
+				finish();
+			}
+		});
+		// 볼륨 셋팅
+		setSound.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				soundMove();
+			}
+		});
+	}
+	
+	private Boolean isNetWork(){
+		   
+    	ConnectivityManager manager = (ConnectivityManager) getSystemService (Context.CONNECTIVITY_SERVICE);
+ 
+    	boolean isMobileAvailable = manager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isAvailable();
+	    boolean isMobileConnect = manager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnectedOrConnecting();
+	    boolean isWifiAvailable = manager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isAvailable();
+	    boolean isWifiConnect = manager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnectedOrConnecting();
+	            
+	    if ((isWifiAvailable && isWifiConnect) || (isMobileAvailable && isMobileConnect)){
+	    	return true;
+    	}else{
+	    	return false;
+    	}
+    }
+	
+	ImageView[] iv;
+	TextView[] tv;
+	LinearLayout[] verticalLL;
+	
+	private void appSettingMake(Vector<DTO_Icon> vec){
+		ll.removeAllViews();
+		ll.setGravity(Gravity.CENTER);
+		DTO_Icon a = new DTO_Icon();
+		
+		iv = new ImageView[vec.size()];
+		tv = new TextView[vec.size()];
+		verticalLL = new LinearLayout[vec.size()];
+		
+		for (int i = 0; i < iv.length; i++) {
+			a = new DTO_Icon();
+			a = vec.get(i);
+			
+			// 틀을 만듬.
+			verticalLL[i] = new LinearLayout(this);
+			verticalLL[i].setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+			verticalLL[i].setOrientation(LinearLayout.VERTICAL);
+			verticalLL[i].setGravity(Gravity.CENTER);
+			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams( 100 ,70 );
+			lp.setMargins( 30 , 0 , 30 , 0 ); // Left, Top, Right, Bottom
+			
+			// 아이콘 이미지를 넣는다.
+			iv[i] = new ImageView(this);
+			// iv[i].setText(a.getName());
+			
+			String url = "http://kyy82.cafe24.com/kyy_update/img/" + a.getIcon_name();
+			
+			LinearLayout.LayoutParams Params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+			iv[i].setLayoutParams(Params);
+			ImageRepository.INSTANCE.setImageBitmap(url, iv[i]);
+			
+			iv[i].setTag(a.getPackage_name());
+			
+			iv[i].setOnClickListener(new View.OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					// TODO Auto-generated method stub 
+					String pakageName = (String)v.getTag();
+					appMove(pakageName);
+				}
+			});
+			
+			// 제목을 입력한다.
+			tv[i] = new TextView(this);
+			tv[i].setText(a.getApp_name());
+			tv[i].setTextSize(12);
+			tv[i].setGravity(Gravity.CENTER);
+			tv[i].setTextColor(Color.parseColor("#464646"));
+			
+			verticalLL[i].addView(iv[i], lp);
+			verticalLL[i].addView(tv[i], lp);
+			
+//			ll.addView(verticalLL[i]);
+			if(appCheck(a.getPackage_name())){
+//				ll.addView(verticalLL[i]);
+			}else{
+//				Drawable alpha = iv[i].getDrawable();
+//				alpha.setLevel(400);
+				ll.addView(verticalLL[i]);
+			}
+		}
+	}
+	
+	private boolean appCheck(String packageName){
+		PackageManager pm = this.getPackageManager();
+        try
+        {
+            pm.getApplicationInfo(packageName, 0);
+            Log.d(this.getClass().getName(), (new StringBuilder(String.valueOf(toString()))).append(" *******************").toString());
+            return true;
+        }
+        catch(android.content.pm.PackageManager.NameNotFoundException e)
+        {
+            Log.d(this.getClass().getName(), (new StringBuilder(String.valueOf(toString()))).append(" *********************").toString());
+            return false;
+        }
+	}
+	
+	/**
+	 * 어플
+	 * @param str
+	 */
+	private void appMove(String str) {
+		Uri uri = Uri.parse("market://details?id=" + str);
+		Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+		startActivity(intent);
+	}
+
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		
+		boolean chk = new Internet_Check(this).internetChk();
+		if(!chk){
+			Toast.makeText(this, "인터넷을 사용할 수 없습니다.", 0).show();
+		}
+	}
+
+	private void emailSend() {
+		Intent intent = new Intent(Intent.ACTION_SENDTO, Uri
+				.parse("mailto:toyongyeon@gmail.com;kjs2286@gmail.com"));
+		startActivity(intent);
+	}
+	
+	// 문자전송
+	private void sms_textSend(String name) {
+		Intent it = new Intent(Intent.ACTION_SEND);
+		it.putExtra(Intent.EXTRA_SUBJECT, "URL을 공유합니다.");
+		it.putExtra(Intent.EXTRA_TEXT, name);
+		it.setType("text/plain");
+		// Intent_Manager.a.startActivity(it);
+		startActivity(Intent.createChooser(it,
+				"How do you want to send message?"));
+	}
+
+	@Override
+	public void onClick(View v) {
+		// TODO Auto-generated method stub
+		switch (v.getId()) {
+			case R.id.setBt01:
+				// 번역기 어플 찾기
+				appMove("com.crayong.project.transmart");
+				break;
+			case R.id.setBt02:
+				// 개발자 문의하기
+				emailSend();
+				break;
+//			case R.id.setBt03:
+//				// 댓글달기
+//				String appName2 = "com.all.eng.dic.kyy.project";
+//				appMove(appName2);
+//				break;
+		}
+	}
+	
+	@Override
+	public void onBackPressed() {
+		// TODO Auto-generated method stub
+		// super.onBackPressed();
+		Intent i = new Intent(getApplication(), AllEngDic_Home.class);
+		i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+		startActivity(i);
+		finish();
+	}
+
+	private void endDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		// builder.setIcon(R.drawable.guitar);
+		builder.setTitle("종료");
+		builder.setMessage("종료하시겠습니까?");
+		DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// showMsg("which : "+ which);
+				if (which == -1) {
+					finish();
+				} else {
+				}
+			}
+		};
+
+		builder.setPositiveButton("예", listener);
+		builder.setNegativeButton("아니오", listener);
+		builder.show();
+	}
+}
